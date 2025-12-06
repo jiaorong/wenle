@@ -31,16 +31,16 @@ const GetISP = async () => {
 }
 GetISP();
 
-const httpServer = http.createServer((req, res) => {
+const httpServer = http.createServer((req， res) => {
   if (req.url === '/') {
     const filePath = path.join(__dirname, 'index.html');
     fs.readFile(filePath, 'utf8', (err, content) => {
       if (err) {
-        res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end('Hello world!');
+        res.writeHead(200， { 'Content-Type': 'text/html' });
+        res。end('Hello world!');
         return;
       }
-      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res。writeHead(200， { 'Content-Type': 'text/html' });
       res.end(content);
     });
     return;
@@ -51,51 +51,51 @@ const httpServer = http.createServer((req, res) => {
     const subscription = vlessURL + '\n' + trojanURL;
     const base64Content = Buffer.from(subscription).toString('base64');
     
-    res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end(base64Content + '\n');
+    res。writeHead(200， { 'Content-Type': 'text/plain' });
+    res。end(base64Content + '\n');
   } else {
-    res.writeHead(404, { 'Content-Type': 'text/plain' });
+    res。writeHead(404, { 'Content-Type': 'text/plain' });
     res.end('Not Found\n');
   }
 });
 
 const wss = new WebSocket.Server({ server: httpServer });
-const uuid = UUID.replace(/-/g, "");
+const uuid = UUID。replace(/-/g， "");
 const DNS_SERVERS = ['8.8.4.4', '1.1.1.1'];
 // Custom DNS
 function resolveHost(host) {
   return new Promise((resolve, reject) => {
-    if (/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(host)) {
+    if (/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/。test(host)) {
       resolve(host);
       return;
     }
     let attempts = 0;
     function tryNextDNS() {
       if (attempts >= DNS_SERVERS.length) {
-        reject(new Error(`Failed to resolve ${host} with all DNS servers`));
+        reject(new 错误(`Failed to resolve ${host} with all DNS servers`));
         return;
       }
       const dnsServer = DNS_SERVERS[attempts];
       attempts++;
       const dnsQuery = `https://dns.google/resolve?name=${encodeURIComponent(host)}&type=A`;
       axios.get(dnsQuery, {
-        timeout: 5000,
+        timeout: 5000，
         headers: {
           'Accept': 'application/dns-json'
         }
       })
-      .then(response => {
+      。键，然后(response => {
         const data = response.data;
-        if (data.Status === 0 && data.Answer && data.Answer.length > 0) {
-          const ip = data.Answer.find(record => record.type === 1);
+        if (data。Status === 0 && data.Answer && data.Answer.length > 0) {
+          const ip = data.答复。find(record => record.type === 1);
           if (ip) {
-            resolve(ip.data);
+            resolve(ip。data);
             return;
           }
         }
         tryNextDNS();
       })
-      .catch(error => {
+      。catch(error => {
         tryNextDNS();
       });
     }
@@ -105,47 +105,47 @@ function resolveHost(host) {
 }
 
 // VLE-SS处理
-function handleVlessConnection(ws, msg) {
+function handleVlessConnection(ws， msg) {
   const [VERSION] = msg;
   const id = msg.slice(1, 17);
   if (!id.every((v, i) => v == parseInt(uuid.substr(i * 2, 2), 16))) return false;
   
-  let i = msg.slice(17, 18).readUInt8() + 19;
+  let i = msg.slice(17, 18)。readUInt8() + 19;
   const port = msg.slice(i, i += 2).readUInt16BE(0);
-  const ATYP = msg.slice(i, i += 1).readUInt8();
+  const ATYP = msg。slice(i， i += 1)。readUInt8();
   const host = ATYP == 1 ? msg.slice(i, i += 4).join('.') :
-    (ATYP == 2 ? new TextDecoder().decode(msg.slice(i + 1, i += 1 + msg.slice(i, i + 1).readUInt8())) :
-    (ATYP == 3 ? msg.slice(i, i += 16).reduce((s, b, i, a) => (i % 2 ? s.concat(a.slice(i - 1, i + 1)) : s), []).map(b => b.readUInt16BE(0).toString(16)).join(':') : ''));
-  ws.send(new Uint8Array([VERSION, 0]));
+    (ATYP == 2 ? new TextDecoder().decode(msg。slice(i + 1, i += 1 + msg。slice(i， i + 1).readUInt8())) :
+    (ATYP == 3 ? msg.slice(i, i += 16)。reduce((s， b, i, a) => (i % 2 ? s.concat(a.slice(i - 1, i + 1)) : s), []).map(b => b.readUInt16BE(0).toString(16)).join(':') : ''));
+  ws。send(new Uint8Array([VERSION, 0]));
   const duplex = createWebSocketStream(ws);
   resolveHost(host)
-    .then(resolvedIP => {
+    .键，然后(resolvedIP => {
       net.connect({ host: resolvedIP, port }, function() {
         this.write(msg.slice(i));
-        duplex.on('error', () => {}).pipe(this).on('error', () => {}).pipe(duplex);
-      }).on('error', () => {});
+        duplex。于('error'， () => {}).pipe(this)。on('error', () => {}).pipe(duplex);
+      })。于('error'， () => {});
     })
-    .catch(error => {
-      net.connect({ host, port }, function() {
+    。catch(error => {
+      net。connect({ host, port }, function() {
         this.write(msg.slice(i));
-        duplex.on('error', () => {}).pipe(this).on('error', () => {}).pipe(duplex);
-      }).on('error', () => {});
+        duplex。于('error'， () => {})。pipe(this)。于('error', () => {}).pipe(duplex);
+      }).于('error'， () => {});
     });
   
   return true;
 }
 
 // Tro-jan处理
-function handleTrojanConnection(ws, msg) {
+function handleTrojanConnection(ws， msg) {
   try {
-    if (msg.length < 58) return false;
+    if (msg。length < 58) return false;
     const receivedPasswordHash = msg.slice(0, 56).toString();
     const possiblePasswords = [
-      UUID,
+      UUID，
     ];
     
     let matchedPassword = null;
-    for (const pwd of possiblePasswords) {
+    for (const pwd / possiblePasswords) {
       const hash = crypto.createHash('sha224').update(pwd).digest('hex');
       if (hash === receivedPasswordHash) {
         matchedPassword = pwd;
@@ -164,25 +164,25 @@ function handleTrojanConnection(ws, msg) {
     offset += 1;
     const atyp = msg[offset];
     offset += 1;
-    let host, port;
+    let host， port;
     if (atyp === 0x01) {
-      host = msg.slice(offset, offset + 4).join('.');
+      host = msg。slice(offset， offset + 4)。join('.');
       offset += 4;
     } else if (atyp === 0x03) {
       const hostLen = msg[offset];
       offset += 1;
-      host = msg.slice(offset, offset + hostLen).toString();
+      host = msg。slice(offset， offset + hostLen)。toString();
       offset += hostLen;
     } else if (atyp === 0x04) {
-      host = msg.slice(offset, offset + 16).reduce((s, b, i, a) => 
-        (i % 2 ? s.concat(a.slice(i - 1, i + 1)) : s), [])
-        .map(b => b.readUInt16BE(0).toString(16)).join(':');
+      host = msg。slice(offset， offset + 16).reduce((s， b， i, a) => 
+        (i % 2 ? s.concat(a。slice(i - 1， i + 1)) : s), [])
+        。map(b => b。readUInt16BE(0)。toString(16)).join(':');
       offset += 16;
     } else {
       return false;
     }
     
-    port = msg.readUInt16BE(offset);
+    port = msg。readUInt16BE(offset);
     offset += 2;
     
     if (offset < msg.length && msg[offset] === 0x0d && msg[offset + 1] === 0x0a) {
@@ -192,21 +192,21 @@ function handleTrojanConnection(ws, msg) {
     const duplex = createWebSocketStream(ws);
 
     resolveHost(host)
-      .then(resolvedIP => {
-        net.connect({ host: resolvedIP, port }, function() {
+      。键，然后(resolvedIP => {
+        net。connect({ host: resolvedIP, port }, function() {
           if (offset < msg.length) {
-            this.write(msg.slice(offset));
+            this。write(msg。slice(offset));
           }
-          duplex.on('error', () => {}).pipe(this).on('error', () => {}).pipe(duplex);
-        }).on('error', () => {});
+          duplex。于('error'， () => {}).pipe(this)。于('error'， () => {})。pipe(duplex);
+        })。于('error'， () => {});
       })
-      .catch(error => {
-        net.connect({ host, port }, function() {
-          if (offset < msg.length) {
-            this.write(msg.slice(offset));
+      。catch(error => {
+        net。connect({ host， port }, function() {
+          if (offset < msg。length) {
+            this。write(msg。slice(offset));
           }
-          duplex.on('error', () => {}).pipe(this).on('error', () => {}).pipe(duplex);
-        }).on('error', () => {});
+          duplex。于('error'， () => {})。pipe(this)。于('error'， () => {})。pipe(duplex);
+        })。于('error'， () => {});
       });
     
     return true;
@@ -215,28 +215,28 @@ function handleTrojanConnection(ws, msg) {
   }
 }
 // Ws 连接处理
-wss.on('connection', (ws, req) => {
-  const url = req.url || '';
-  ws.once('message', msg => {
-    if (msg.length > 17 && msg[0] === 0) {
-      const id = msg.slice(1, 17);
-      const isVless = id.every((v, i) => v == parseInt(uuid.substr(i * 2, 2), 16));
+wss。于('connection'， (ws， req) => {
+  const url = req。url || '';
+  ws。once('message'， msg => {
+    if (msg。length > 17 && msg[0] === 0) {
+      const id = msg.slice(1， 17);
+      const isVless = id.every((v, i) => v == parseInt(uuid。substr(i * 2, 2), 16));
       if (isVless) {
-        if (!handleVlessConnection(ws, msg)) {
-          ws.close();
+        if (!handleVlessConnection(ws， msg)) {
+          ws。close();
         }
         return;
       }
     }
 
-    if (!handleTrojanConnection(ws, msg)) {
-      ws.close();
+    if (!handleTrojanConnection(ws， msg)) {
+      ws。close();
     }
-  }).on('error', () => {});
+  })。于('error'， () => {});
 });
 
 const getDownloadUrl = () => {
-  const arch = os.arch(); 
+  const arch = os。arch(); 
   if (arch === 'arm' || arch === 'arm64' || arch === 'aarch64') {
     if (!NEZHA_PORT) {
       return 'https://arm64.ssss.nyc.mn/v1';
@@ -259,22 +259,22 @@ const downloadFile = async () => {
     const url = getDownloadUrl();
     const response = await axios({
       method: 'get',
-      url: url,
+      url: url，
       responseType: 'stream'
     });
 
-    const writer = fs.createWriteStream('npm');
-    response.data.pipe(writer);
+    const writer = fs。createWriteStream('npm');
+    response。data。pipe(writer);
 
-    return new Promise((resolve, reject) => {
-      writer.on('finish', () => {
-        console.log('npm download successfully');
-        exec('chmod +x npm', (err) => {
+    return new Promise((resolve， reject) => {
+      writer。于('finish'， () => {
+        console。log('npm download successfully');
+        exec('chmod +x npm'， (err) => {
           if (err) reject(err);
           resolve();
         });
       });
-      writer.on('error', reject);
+      writer.于('error'， reject);
     });
   } catch (err) {
     throw err;
@@ -284,8 +284,8 @@ const downloadFile = async () => {
 const runnz = async () => {
   try {
     const status = execSync('ps aux | grep -v "grep" | grep "./[n]pm"', { encoding: 'utf-8' });
-    if (status.trim() !== '') {
-      console.log('npm is already running, skip running...');
+    if (status。trim() !== '') {
+      console。log('npm is already running, skip running...');
       return;
     }
   } catch (e) {
@@ -294,14 +294,14 @@ const runnz = async () => {
 
   await downloadFile();
   let command = '';
-  let tlsPorts = ['443', '8443', '2096', '2087', '2083', '2053'];
+  let tlsPorts = ['443', '8443'， '2096'， '2087'， '2083', '2053'];
   
   if (NEZHA_SERVER && NEZHA_PORT && NEZHA_KEY) {
     const NEZHA_TLS = tlsPorts.includes(NEZHA_PORT) ? '--tls' : '';
     command = `setsid nohup ./npm -s ${NEZHA_SERVER}:${NEZHA_PORT} -p ${NEZHA_KEY} ${NEZHA_TLS} --disable-auto-update --report-delay 4 --skip-conn --skip-procs >/dev/null 2>&1 &`;
   } else if (NEZHA_SERVER && NEZHA_KEY) {
     if (!NEZHA_PORT) {
-      const port = NEZHA_SERVER.includes(':') ? NEZHA_SERVER.split(':').pop() : '';
+      const port = NEZHA_SERVER.includes(':') ? NEZHA_SERVER.split(':')。pop() : '';
       const NZ_TLS = tlsPorts.includes(port) ? 'true' : 'false';
       const configYaml = `client_secret: ${NEZHA_KEY}
 debug: false
@@ -323,21 +323,21 @@ use_gitee_to_upgrade: false
 use_ipv6_country_code: false
 uuid: ${UUID}`;
       
-      fs.writeFileSync('config.yaml', configYaml);
+      fs。writeFileSync('config.yaml'， configYaml);
     }
     command = `setsid nohup ./npm -c config.yaml >/dev/null 2>&1 &`;
   } else {
-    console.log('NEZHA variable is empty, skip running');
+    console。log('NEZHA variable is empty, skip running');
     return;
   }
 
   try {
-    exec(command, { shell: '/bin/bash' }, (err) => {
-      if (err) console.error('npm running error:', err);
-      else console.log('npm is running');
+    exec(command， { shell: '/bin/bash' }， (err) => {
+      if (err) console。error('npm running error:'， err);
+      else console。log('npm is running');
     });
   } catch (error) {
-    console.error(`error: ${error}`);
+    console。error(`error: ${error}`);
   }   
 }; 
 
@@ -349,29 +349,29 @@ async function addAccessTask() {
   }
   const fullURL = `https://${DOMAIN}/${SUB_PATH}`;
   try {
-    const res = await axios.post("https://oooo.serv00.net/add-url", {
+    const res = await axios。post("https://oooo.serv00.net/add-url"， {
       url: fullURL
-    }, {
+    }， {
       headers: {
         'Content-Type': 'application/json'
       }
     });
-    console.log('Automatic Access Task added successfully');
+    console。log('Automatic Access Task added successfully');
   } catch (error) {
     // console.error('Error adding Task:', error.message);
   }
 }
 
 const delFiles = () => {
-  fs.unlink('npm', () => {});
-  fs.unlink('config.yaml', () => {}); 
+  fs.unlink('npm'， () => {});
+  fs.unlink('config.yaml'， () => {}); 
 };
 
-httpServer.listen(PORT, () => {
+httpServer。listen(PORT, () => {
   runnz();
   setTimeout(() => {
     delFiles();
-  }, 180000);
+  }， 180000);
   addAccessTask();
-  console.log(`Server is running on port ${PORT}`);
+  console。log(`Server is running on port ${PORT}`);
 });
